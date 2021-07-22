@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?><Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net48</TargetFramework>
+		<StartAction>Program</StartAction>
+		<StartProgram>C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\MSBuild.exe</StartProgram>
+		<StartArguments>C:\Users\Public\source\repos\Snowflaqe\src\SpotifyWithTasks.fsproj -t:Build</StartArguments>
+	</PropertyGroup>
+</Project>

@@ -79,55 +79,24 @@ let buildGithubFable() =
     elif Shell.Exec(Tools.dotnet, "build", path [ solutionRoot; "samples"; "github"; "output" ]) <> 0
     then failwith "Failed to build the generated Github project"
 
-let generateTasksUsings (targets: MSBuildTarget seq) =
-    targets
-    |> Seq.map (fun t -> t.Tasks)
-    |> Seq.fold (fun folder tasks -> folder |> Seq.append tasks) Seq.empty
-    |> Seq.groupBy (fun task -> (task.FullName, task.AssemblyFile))
-    |> Seq.map (fun (key, _) ->
-        let (fullName, assemblyFile) = key
-        MSBuildXElement.UsingTask(fullName, assemblyFile))
-
-let generateProjectFile (imports: string seq) (defaultTargets: string option) (targets: MSBuildTarget seq) =
+let generateProjectFile (imports: string seq) =
     XDocument(
         XElement.ofStringName("Project",
             XAttribute.ofStringName("Sdk", "Microsoft.NET.Sdk"),
             seq {
-                if defaultTargets.IsSome
-                then yield XAttribute.ofStringName("DefaultTargets", defaultTargets.Value) :> obj
                 yield! imports |> Seq.map (fun path -> MSBuildXElement.Import(path) :> obj)
                 yield XElement.ofStringName("PropertyGroup",
                         XElement.ofStringName("OutputType", "Exe"),
                         XElement.ofStringName("TargetFramework", "netcoreapp3.1")) :> obj
-                yield! generateTasksUsings targets |> Seq.map (fun u -> u :> obj)
-                yield! targets
-                |> Seq.map
-                    (fun target -> MSBuildXElement.Target(target) :> obj)
             }))
 
-let createProjectFile imports defaultTargets targets (path: string) =
-    let project = generateProjectFile imports defaultTargets targets
+let createProjectFile imports (path: string) =
+    let project = generateProjectFile imports
     project.WriteTo(path)
 
 let tasksIntegration() =
-    let generateGQLClientTask =
-        { Name = "GenerateGraphQLClient"
-          FullName = "Snowflaqe.Tasks.GenerateGraphQLClient"
-          AssemblyFile = path [ solutionRoot; "Snowflaqe.Tasks"; "bin"; "Debug"; "netcoreapp3.1"; "Snowflaqe.Tasks.dll" ]
-          Parameters =
-            seq {
-                KeyValuePair("Output", path [ solutionRoot; "src"; "output"] :> obj)
-                KeyValuePair("Project", "Spotify" :> obj)
-                KeyValuePair("Queries", path [ solutionRoot; "src"; "queries"] :> obj)
-                KeyValuePair("Schema", path [ solutionRoot; "src"; "spotify-schema.json"] :> obj)
-            }}
     createProjectFile
-        Seq.empty
-        None
-        ({  Name = "GenerateGraphQLClient"
-            AfterTargets = None
-            BeforeTargets = Some "Rebuild"
-            Tasks = (generateGQLClientTask |> Seq.singleton) } |> Seq.singleton)
+        ("..\Snowflaqe.Tasks\build\tasks.targets" |> Seq.singleton)
         (path [ solutionRoot; "src"; "SpotifyWithTasks.fsproj"])
 
     if Shell.Exec(Tools.dotnet, "run -f netcoreapp3.1 -p Snowflaqe.fsproj -- --config ./snowflaqe-props.json --generate", path [ solutionRoot; "src" ]) <> 0 then
@@ -264,7 +233,7 @@ let clear() =
     Directory.Delete(path [ solutionRoot; "src"; "output" ], true)
 
 let integration() =
-    //tasksIntegration()
+    tasksIntegration()
     propsIntegration()
     fsprojIntegration()
     clear()

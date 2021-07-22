@@ -6,6 +6,20 @@
 	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <PackageType>MSBuildSdk</PackageType>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Configurations>Debug;Release;Debug MSBuild;Debug MSBuild Core;Release MSBuild;Release MSBuild Core</Configurations>
+    <!--<TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>-->
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(Configuration.EndsWith('MSBuild'))">
+    <StartAction>Program</StartAction>
+    <StartProgram>cmd</StartProgram>
+    <StartArguments>/K ""$(MSBuildBinPath)/msbuild" "$([System.IO.Path]::GetFullPath("$(MSBuildProjectDirectory)\..\src\SpotifyWithTasks.fsproj"))" -t:Rebuild"</StartArguments>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(Configuration.EndsWith('MSBuild Core'))">
+    <StartAction>Program</StartAction>
+    <StartProgram>cmd</StartProgram>
+    <StartArguments>/K dotnet msbuild ../src/SpotifyWithTasks.fsproj -t:Rebuild -r:True -p:CustomTasksEnabled=True</StartArguments>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
@@ -15,17 +29,10 @@
     </PackageReference>
   </ItemDefinitionGroup>
 
-  <ItemGroup />
-
   <ItemGroup>
-    <PackageReference Include="Fody" Version="6.5.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="FSharp.Compiler.Service" Version="38.0.2" />
 		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All" />
-		<PackageReference Include="ModuleInit.Fody" Version="2.1.1" />
-    <PackageReference Update="FSharp.Core" Verion="5.0.1" Version="5.0.0" />
+    <PackageReference Update="FSharp.Core" Verion="5.0.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,7 +43,12 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+    <PackageReference Include="Fody" Version="6.5.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="1.16.30" CopyLocal="false" Publish="false" />
+		<PackageReference Include="ModuleInit.Fody" Version="2.1.1" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
@@ -57,16 +69,38 @@
   </Target>
 
   <ItemGroup>
-    <None Include="build\**" Pack="true" PackagePath="build" />
-    <Content Include="FodyWeavers.xml" />
-    <Compile Include="AssemblyResolver.fs" />
-    <Compile Include="ModuleInitializer.fs" />
+    <None Include="Debug.md" />
+    <None Include="build/**" Pack="true" PackagePath="build" />
+    <None Include="FodyWeavers.xml" />
     <Compile Include="ContextAwareTask.fs" />
     <Compile Include="GenerateGraphQLClient.fs" />
+    <Compile Include="AssemblyResolver.fs" />
+    <Compile Include="ModuleInitializer.fs" />
   </ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\src\Snowflaqe.fsproj" />
+	  <ProjectReference Include="../src/Snowflaqe.fsproj">
+      <!--<ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <IncludeAssets>Snowflaqe.dll</IncludeAssets>-->
+	  </ProjectReference>
 	</ItemGroup>
 
+  <!--<Target DependsOnTargets="ResolveReferences" Name="CopyProjectReferencesToPackage">
+    <ItemGroup>
+      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))"/>
+    </ItemGroup>
+  </Target>-->
+  <Target Name="PackTaskDependencies" BeforeTargets="GenerateNuspec">
+    <!--
+    The include needs to happen after output has been copied to build output folder
+    but before NuGet generates a nuspec. See https://github.com/NuGet/Home/issues/4704.
+    -->
+    <ItemGroup>
+      <_PackageFiles Include="bin\$(Configuration)\**">
+        <PackagePath>build\%(RecursiveDir)</PackagePath>
+        <Visible>false</Visible>
+        <BuildAction>Content</BuildAction>
+      </_PackageFiles>
+    </ItemGroup>
+  </Target>
 </Project>
