@@ -11,6 +11,7 @@
     <Version>1.23.0</Version>
     <PackageReleaseNotes>Generate projects using XML API</PackageReleaseNotes>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

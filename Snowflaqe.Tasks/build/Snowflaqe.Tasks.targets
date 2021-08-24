@@ -1,0 +1,38 @@
+﻿<Project>
+    <PropertyGroup>
+        <BuildDependsOn>
+            GenerateGraphQLClient;
+            $(BuildDependsOn)
+        </BuildDependsOn>
+        <SnowflaqeGeneratedFilesNamespace Condition="'$(SnowflaqeGeneratedFilesNamespace)' == ''">$(RootNamespace)</SnowflaqeGeneratedFilesNamespace>
+    </PropertyGroup>
+    <PropertyGroup>
+        <_AsemblyInfoGenerationSdkTfm Condition="'$(MSBuildRuntimeType)' == 'Core'">netstandard2.0</_AsemblyInfoGenerationSdkTfm>
+        <_AsemblyInfoGenerationSdkTfm Condition="'$(MSBuildRuntimeType)' != 'Core'">net48</_AsemblyInfoGenerationSdkTfm>
+        <_AsemblyInfoGenerationSdkAssembly>$(MSBuildThisFileDirectory)$(_AsemblyInfoGenerationSdkTfm)/Snowflaqe.Tasks.dll</_AsemblyInfoGenerationSdkAssembly>
+        <_AsemblyInfoGenerationSdkAssembly Condition="!Exists($(_AsemblyInfoGenerationSdkAssembly))">$(MSBuildThisFileDirectory)../bin/Debug/$(_AsemblyInfoGenerationSdkTfm)/Snowflaqe.Tasks.dll</_AsemblyInfoGenerationSdkAssembly>
+    </PropertyGroup>
+    <UsingTask
+        TaskName="Snowflaqe.Tasks.GenerateGraphQLClient"
+        AssemblyFile="$(_AsemblyInfoGenerationSdkAssembly)" />
+    <Target Name="GenerateGraphQLClient" BeforeTargets="BeforeRebuild">
+        <ItemGroup>
+            <PackageReference Update="FSharp.Core" Version="5.0.1" />
+            <PackageReference Include="Fable.Remoting.Json" Version="2.14.0" />
+        </ItemGroup>
+        <GenerateGraphQLClient
+            Project="$(SnowflaqeGeneratedFilesNamespace)"
+            Queries="$(SnowflaqeQueriesPath)"
+            Schema="$(SnowflaqeSchemaFile)"
+            Configuration="$(Configuration)"
+            Platform="$(Platform)"
+            Target="$(SnowflaqeTarget)">
+            <Output TaskParameter="GeneratedFiles" ItemName="SnowflaqeGeneratedFiles" />
+        </GenerateGraphQLClient>
+        <Message Text="Generated files:" Importance="high" />
+        <Message Text="@(SnowflaqeGeneratedFiles)" />
+        <ItemGroup>
+            <Compile Include="@(SnowflaqeGeneratedFiles)" />
+        </ItemGroup>
+    </Target>
+</Project>

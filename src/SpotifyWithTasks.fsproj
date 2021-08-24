@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--<Import Project="..\Snowflaqe.Tasks\build\tasks.targets" />-->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <CustomTasksEnabled Condition="'$(CustomTasksEnabled)' == ''">False</CustomTasksEnabled>
+    <SnowflaqeQueriesPath>C:\Users\Public\source\repos\Snowflaqe\src\queries</SnowflaqeQueriesPath>
+    <SnowflaqeSchemaFile>C:\Users\Public\source\repos\Snowflaqe\src\spotify-schema.json</SnowflaqeSchemaFile>
+    <SnowflaqeTarget>fsharp</SnowflaqeTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="5.0.1" />
+    <PackageReference Include="Fable.Remoting.Json" Version="2.14.0" />
+    <PackageReference Include="Snowflaqe.Tasks" Version="1.0.0" />
+  </ItemGroup>
+</Project>

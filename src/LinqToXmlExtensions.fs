@@ -2,6 +2,7 @@
 module Snowflaqe.LinqToXmlExtensions
 
 open System
+open System.Collections.Generic
 open System.Xml
 open System.Xml.Linq
 
